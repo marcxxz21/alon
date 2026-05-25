@@ -4,7 +4,7 @@
 
 Alon is designed to use Supabase PostgreSQL. The schema lives in:
 
-- `infra/supabase/migrations/0001_initial_schema.sql`
+- `infra/supabase/migrations`
 
 Until these environment variables are set, the Vercel app intentionally runs in mock mode:
 
@@ -18,6 +18,8 @@ When Supabase is connected, the dashboard reads from:
 - `mart_ticker_daily`
 - `mart_sector_daily`
 - `predictions_daily`
+- `portfolio_holdings`
+- `portfolio_daily_snapshots`
 - `watchlists`
 - `watchlist_items`
 
@@ -32,11 +34,13 @@ The PSEi Yahoo Finance symbol is `PSEI.PS`. The worker seeds it as:
 The frontend does not run Python `yfinance` directly on Vercel. The intended production flow is:
 
 ```txt
-yfinance in services/worker
-  -> Supabase raw_prices
-  -> dbt mart_ticker_daily
+yfinance in services/worker_lib
+  -> Airflow daily_market_pipeline
+  -> Supabase raw_provider_prices / core_daily_prices
+  -> dbt/alon mart_ticker_daily
+  -> Airflow daily_portfolio_refresh
+  -> Supabase portfolio_daily_snapshots
   -> Next.js dashboard
 ```
 
-If the database is not connected or the worker has not run, Alon shows mock market data and labels the warehouse as mock mode.
-
+V1 uses `yfinance` only. If the database is not connected or the worker has not run, Alon shows mock market data and labels the warehouse as mock mode.

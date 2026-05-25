@@ -12,9 +12,9 @@
     "build:web": "npm --workspace apps/web run build",
     "lint:web": "npm --workspace apps/web run lint",
     "typecheck:web": "npm --workspace apps/web run typecheck",
-    "test:worker": "cd services/worker && pytest",
-    "dbt:parse": "cd dbt/stocksage && dbt parse",
-    "dbt:test": "cd dbt/stocksage && dbt test"
+    "test:worker": "cd services/worker_lib && pytest",
+    "dbt:parse": "cd dbt/alon && dbt parse",
+    "dbt:test": "cd dbt/alon && dbt test"
   },
   "engines": {
     "node": ">=20.18.0"

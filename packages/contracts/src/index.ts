@@ -74,3 +74,42 @@ export type WatchlistItem = {
   addedAt: string;
 };
 
+export type PortfolioHolding = {
+  id: string;
+  symbol: string;
+  companyName: string;
+  sharesOwned: number;
+  averageBuyPrice: number;
+  currentPrice: number;
+  investedAmount: number;
+  marketValue: number;
+  gainLoss: number;
+  returnPct: number;
+  signal: SignalLabel;
+  confidence: number;
+  notes?: string | null;
+};
+
+export type PortfolioSummary = {
+  totalInvestedAmount: number;
+  totalMarketValue: number;
+  totalGainLoss: number;
+  totalReturnPct: number;
+  topGainer: PortfolioHolding | null;
+  topLoser: PortfolioHolding | null;
+  holdings: PortfolioHolding[];
+  lastRefreshAt: string;
+  isStale: boolean;
+};
+
+export type CompanyProfile = {
+  symbol: string;
+  companyName: string;
+  description: string | null;
+  industry: string | null;
+  sector: string | null;
+  website: string | null;
+  marketCap: number | null;
+  currency: string | null;
+  sourceUpdatedAt: string | null;
+};

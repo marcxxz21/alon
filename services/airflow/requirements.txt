@@ -1,0 +1,6 @@
+apache-airflow
+pandas
+psycopg[binary]
+sqlalchemy
+yfinance
+-e ../worker_lib

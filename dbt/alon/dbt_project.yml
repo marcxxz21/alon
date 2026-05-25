@@ -1,0 +1,17 @@
+name: "alon"
+version: "0.1.0"
+config-version: 2
+
+profile: "alon"
+
+model-paths: ["models"]
+test-paths: ["tests"]
+
+models:
+  alon:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
+    features:
+      +materialized: table

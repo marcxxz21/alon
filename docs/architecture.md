@@ -2,32 +2,42 @@
 
 Alon is a hybrid data engineering app:
 
-1. The Python worker ingests daily OHLCV data through a provider interface.
-2. Raw rows land in Supabase PostgreSQL.
-3. dbt builds staging tables, ticker marts, sector marts, and feature tables.
-4. The worker trains a baseline classifier and writes explainable predictions.
-5. Next.js reads the API contract and renders a PWA dashboard on Vercel.
+1. Supabase Auth links every profile, holding, transaction, note, and watchlist row to `auth.users.id`.
+2. Airflow runs the daily yfinance-only market pipeline after Philippine market close.
+3. Raw rows land in Supabase PostgreSQL, then dbt builds staging tables, marts, sector summaries, and feature tables.
+4. The worker library publishes baseline explainable predictions.
+5. Airflow runs the portfolio refresh pipeline to recompute each user portfolio from the latest daily close.
+6. Next.js reads stable API contracts and renders a mobile-first PWA dashboard on Vercel.
 
 ```txt
-yfinance provider
-  -> Python worker
-  -> Supabase raw_prices
-  -> dbt stg/mart/features
-  -> baseline ML predictions
+yfinance only
+  -> Airflow daily_market_pipeline
+  -> Supabase raw_provider_prices / core_daily_prices
+  -> dbt alon marts and features
+  -> baseline ML predictions_daily
+  -> Airflow daily_portfolio_refresh
+  -> portfolio_daily_snapshots
   -> Next.js route handlers
-  -> Vercel PWA dashboard
+  -> Vercel PWA
 ```
 
 ## Deployment shape
 
 - Vercel deploys `apps/web`.
 - Supabase hosts Postgres and Auth.
-- Railway or Render runs `services/worker`.
-- `services/api` can be deployed only if you need protected HTTP triggers.
+- Railway or Render runs `services/airflow` plus the installed `services/worker_lib` package.
 
-## Data source replacement
+## Data source
 
-`yfinance` is intentionally isolated in `services/worker/src/stocksage_worker/providers`. To replace it, add a provider class that returns the normalized price frame defined by `MarketDataProvider`, then update `DATA_PROVIDER`.
+V1 uses `yfinance` only. No other market data provider is scaffolded for this version. The extraction code lives in `services/worker_lib/src/alon_worker_lib/yfinance_source.py`, and Philippine symbols use Yahoo `.PS` conventions where available.
+
+## Cross-device persistence
+
+Supabase Auth issues a user id. User-owned rows in `portfolio_holdings`, `holding_transactions`, `ticker_notes`, `watchlists`, and `watchlist_items` store that id and are protected with Row Level Security. When the same person logs in from another device, the app requests `/api/portfolio` and `/api/watchlists` with the Supabase access token, so the same database rows appear immediately.
+
+## Daily portfolio propagation
+
+`daily_market_pipeline` refreshes warehouse prices and predictions. `daily_portfolio_refresh` then joins `portfolio_holdings` to the latest daily close and writes `portfolio_daily_snapshots`. The app reads those refreshed prices rather than fetching live prices in the browser.
 
 ## Mobile strategy
 

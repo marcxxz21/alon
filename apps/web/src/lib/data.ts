@@ -217,6 +217,47 @@ export async function getSectors() {
   return sectors;
 }
 
+export async function getTickerProfile(symbol: string) {
+  const normalized = symbol.toUpperCase();
+  const ticker = (await getTickers()).find((row) => row.symbol === normalized);
+  if (!ticker) return null;
+
+  if (hasSupabaseConfig()) {
+    const { data, error } = await getServiceSupabase()
+      .from("company_profiles")
+      .select("ticker_symbol,company_name,description,industry,sector,website,market_cap,currency,source_updated_at")
+      .eq("ticker_symbol", normalized)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (data) {
+      return {
+        symbol: data.ticker_symbol,
+        companyName: data.company_name,
+        description: data.description,
+        industry: data.industry,
+        sector: data.sector,
+        website: data.website,
+        marketCap: data.market_cap === null ? null : Number(data.market_cap),
+        currency: data.currency,
+        sourceUpdatedAt: data.source_updated_at
+      };
+    }
+  }
+
+  return {
+    symbol: ticker.symbol,
+    companyName: ticker.companyName,
+    description: `${ticker.companyName} is tracked through the Alon v1 yfinance-only market pipeline using ${ticker.yahooSymbol}.`,
+    industry: null,
+    sector: ticker.sector,
+    website: null,
+    marketCap: null,
+    currency: "PHP",
+    sourceUpdatedAt: null
+  };
+}
+
 export async function getWatchlists() {
   return mockWatchlists;
 }

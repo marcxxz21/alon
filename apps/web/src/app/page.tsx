@@ -9,6 +9,7 @@ import {
   Stack,
   WaveSawtooth
 } from "@/components/phosphor-icons";
+import type { Route } from "next";
 import Link from "next/link";
 import { CommandTopbar, WatchlistComposer } from "@/components/command-workbench";
 import { PriceChart } from "@/components/price-chart";
@@ -87,10 +88,10 @@ export default async function Home() {
               <WaveSawtooth size={25} weight="bold" />
               <span>Alon</span>
             </div>
-            <Link className="rail-link active" href="/"><House size={18} /> Overview</Link>
-            <a className="rail-link" href="/api/leaderboards"><ChartLineUp size={18} /> Markets</a>
-            <a className="rail-link" href="/api/sectors"><Stack size={18} /> Pipelines</a>
-            <a className="rail-link" href="/api/tickers"><Database size={18} /> Warehouse</a>
+            <Link className="rail-link active" href={"/dashboard" as Route}><House size={18} /> Overview</Link>
+            <Link className="rail-link" href={"/market" as Route}><ChartLineUp size={18} /> Markets</Link>
+            <Link className="rail-link" href={"/predictions" as Route}><Stack size={18} /> Signals</Link>
+            <Link className="rail-link" href={"/tracker" as Route}><Database size={18} /> Tracker</Link>
           </aside>
 
           <div className="deck-content">
@@ -142,7 +143,7 @@ export default async function Home() {
 
               <article className="glass-tile pipeline-health">
                 <p className="tile-label">Pipeline Health</p>
-                <span>Prefect worker</span>
+                <span>Airflow DAGs</span>
                 <div className="health-orbit">
                   <strong>24</strong>
                   <small>total</small>
@@ -292,7 +293,7 @@ export default async function Home() {
       <footer className="deck-footer">
         <span>Educational analytics only</span>
         <span>Data warehouse: US-East-1</span>
-        <span>Provider: yfinance fallback</span>
+        <span>Provider: yfinance only</span>
       </footer>
     </main>
   );

@@ -15,7 +15,6 @@ Install these locally:
 Project dependencies are declared in:
 
 - `apps/web/package.json`
-- `services/worker/pyproject.toml`
-- `services/api/pyproject.toml`
-- `dbt/stocksage/packages.yml`
-
+- `services/worker_lib/pyproject.toml`
+- `services/airflow/requirements.txt`
+- `dbt/alon/packages.yml`
