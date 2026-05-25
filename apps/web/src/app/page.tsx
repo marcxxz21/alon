@@ -1,12 +1,15 @@
 import {
   ChartLineUp,
+  ChartPieSlice,
   Database,
   House,
+  Plus,
   Pulse,
   ShieldCheck,
   Sparkle,
   SquaresFour,
   Stack,
+  UserCircle,
   WaveSawtooth
 } from "@/components/phosphor-icons";
 import type { Route } from "next";
@@ -16,6 +19,7 @@ import { PriceChart } from "@/components/price-chart";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { getLeaderboards, getPrices, getSectors, getTickerSummary, getTickers, getWatchlists } from "@/lib/data";
 import { hasSupabaseConfig } from "@/lib/supabase";
+import { getSystemStatus } from "@/lib/system-status";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-PH", {
@@ -40,11 +44,11 @@ function formatIndex(value: number) {
 }
 
 const pipelineRuns = [
-  { name: "market_data_ingest", state: "Completed", time: "9:38 AM", rows: "452K" },
-  { name: "news_sentiment_pipeline", state: "Completed", time: "9:33 AM", rows: "2m 14s" },
-  { name: "features_generation", state: "Running", time: "9:33 AM", rows: "1m 21s" },
-  { name: "model_training", state: "Failed", time: "9:28 AM", rows: "retry queued" },
-  { name: "publish_predictions", state: "Completed", time: "9:25 AM", rows: "45s" }
+  { name: "load_active_ticker_universe", state: "Completed", time: "6:30 PM", rows: "6 tickers" },
+  { name: "extract_yfinance_daily_ohlcv", state: "Completed", time: "6:31 PM", rows: "PSEI.PS" },
+  { name: "compute_indicators_and_features", state: "Running", time: "6:34 PM", rows: "technical-v1" },
+  { name: "baseline_ml_inference", state: "Completed", time: "6:37 PM", rows: "signals" },
+  { name: "daily_portfolio_refresh", state: "Completed", time: "7:15 PM", rows: "snapshots" }
 ];
 
 const alertFeed = [
@@ -54,13 +58,14 @@ const alertFeed = [
 ];
 
 export default async function Home() {
-  const [summary, prices, leaderboards, sectors, watchlists, tickers] = await Promise.all([
+  const [summary, prices, leaderboards, sectors, watchlists, tickers, systemStatus] = await Promise.all([
     getTickerSummary("PSEI"),
     getPrices("PSEI"),
     getLeaderboards(),
     getSectors(),
     getWatchlists(),
-    getTickers()
+    getTickers(),
+    getSystemStatus()
   ]);
 
   if (!summary) {
@@ -75,7 +80,7 @@ export default async function Home() {
   const databaseConnected = hasSupabaseConfig();
 
   return (
-    <main className="tide-page">
+    <main className="tide-page web-dashboard-page">
       <ServiceWorkerRegister />
       <div className="watermark watermark-top">Alon</div>
       <div className="watermark watermark-bottom">Market Tide</div>
@@ -104,7 +109,7 @@ export default async function Home() {
               </div>
               <div className="deck-health">
                 <ShieldCheck size={19} weight="fill" />
-                {databaseConnected ? "Supabase connected" : "Mock mode: connect Supabase"}
+                {systemStatus.supabase.reachable ? "Supabase connected" : "Mock mode: connect Supabase"}
               </div>
             </header>
 
@@ -161,14 +166,14 @@ export default async function Home() {
                 <div className="warehouse-main">
                   <Database size={38} />
                   <div>
-                    <small>{databaseConnected ? "Live database" : "Not connected yet"}</small>
-                    <strong>{databaseConnected ? "Healthy" : "Mock mode"}</strong>
+                    <small>{systemStatus.supabase.configured ? "Env configured" : "Env missing"}</small>
+                    <strong>{systemStatus.supabase.reachable ? "Healthy" : "Mock mode"}</strong>
                   </div>
                 </div>
                 <div className="warehouse-stats">
-                  <span>Last updated <strong>{databaseConnected ? "14m ago" : "local"}</strong></span>
-                  <span>Rows <strong>{databaseConnected ? "2,847,193" : "mock"}</strong></span>
-                  <span>Tables <strong>12 planned</strong></span>
+                  <span>Supabase <strong>{systemStatus.supabase.configured ? "configured" : "missing"}</strong></span>
+                  <span>Airflow <strong>{systemStatus.airflow.configured ? "configured" : "missing"}</strong></span>
+                  <span>Mode <strong>{databaseConnected ? "live" : "mock"}</strong></span>
                 </div>
               </article>
             </section>
@@ -181,7 +186,7 @@ export default async function Home() {
                       <span className={range === "5D" ? "active" : ""} key={range}>{range}</span>
                     ))}
                   </div>
-                  <button className="deck-select" type="button">Indicators</button>
+                  <Link className="deck-select" href={"/api/tickers/PSEI/indicators" as Route}>Indicators</Link>
                 </div>
                 <PriceChart prices={prices} />
               </article>
@@ -243,7 +248,7 @@ export default async function Home() {
                     <p className="tile-label">ETL Run Timeline</p>
                     <span>worker + dbt + prediction publish</span>
                   </div>
-                  <a href="/api/tickers">View API</a>
+                  <Link href={"/api/system/status" as Route}>Check status</Link>
                 </div>
                 <div className="run-list">
                   {pipelineRuns.map((run, index) => (
@@ -289,6 +294,16 @@ export default async function Home() {
           </div>
         </section>
       </section>
+
+      <nav className="mobile-home-dock" aria-label="Alon mobile navigation">
+        <Link href={"/dashboard" as Route}><House size={20} /><span>Home</span></Link>
+        <Link href={"/tracker" as Route}><ChartPieSlice size={20} /><span>Tracker</span></Link>
+        <Link href={"/market" as Route}><ChartLineUp size={20} /><span>Market</span></Link>
+        <Link href={"/account" as Route}><UserCircle size={20} /><span>Status</span></Link>
+      </nav>
+      <Link className="mobile-fab home-fab" href={"/tracker" as Route} aria-label="Add holding">
+        <Plus size={32} />
+      </Link>
 
       <footer className="deck-footer">
         <span>Educational analytics only</span>

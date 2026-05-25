@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
+import type { Route } from "next";
 import type { LeaderboardRow, Ticker, Watchlist } from "@stocksage/contracts";
 import { CalendarBlank, MagnifyingGlass } from "@/components/phosphor-icons";
 
@@ -52,6 +54,7 @@ export function CommandTopbar({ tickers, leaderboards, watchlist }: CommandWorkb
                 onClick={() => {
                   setActiveSymbol(ticker.symbol);
                   setQuery(ticker.symbol);
+                  window.location.href = `/stocks/${ticker.symbol}`;
                 }}
                 type="button"
               >
@@ -69,12 +72,12 @@ export function CommandTopbar({ tickers, leaderboards, watchlist }: CommandWorkb
         <CalendarBlank size={16} />
         May 12, 2026 - May 16, 2026
       </div>
-      <button className="deck-select" type="button">Production</button>
-      <div className="live-sync">
+      <Link className="deck-select" href={"/account" as Route}>Connections</Link>
+      <Link className="live-sync" href={"/api/system/status" as Route}>
         <i />
-        Live Sync
+        System Status
         <span>2.4s ago</span>
-      </div>
+      </Link>
       <div className="command-readout">
         <span>Focus</span>
         <strong>{activeSymbol}</strong>
@@ -92,7 +95,7 @@ export function WatchlistComposer({ tickers, watchlist }: Pick<CommandWorkbenchP
   const [message, setMessage] = useState("Ready to stage a symbol for Supabase watchlist writes.");
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
 
-  function addTicker() {
+  async function addTicker() {
     const normalized = symbol.trim().toUpperCase();
     const exists = tickers.some((ticker) => ticker.symbol === normalized);
 
@@ -114,8 +117,16 @@ export function WatchlistComposer({ tickers, watchlist }: Pick<CommandWorkbenchP
       return;
     }
 
-    setStatus("success");
-    setMessage(`${normalized} is staged for ${watchlist.name}. Production will persist through Supabase RLS.`);
+    const response = await fetch(`/api/watchlists/${watchlist.id}/items`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ symbol: normalized })
+    });
+
+    setStatus(response.ok ? "success" : "error");
+    setMessage(response.ok
+      ? `${normalized} was accepted by the watchlist API. Add Supabase env vars to persist it per account.`
+      : `Could not add ${normalized}. Check /api/system/status.`);
     setSymbol("");
   }
 

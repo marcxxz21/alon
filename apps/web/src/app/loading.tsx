@@ -5,11 +5,6 @@ export default function Loading() {
       <div className="watermark watermark-bottom">Market Tide</div>
       <div className="wave-field" aria-hidden="true" />
       <section className="loading-shell" aria-label="Loading Alon dashboard">
-        <div className="loading-phone">
-          <i />
-          <i />
-          <i />
-        </div>
         <div className="loading-deck">
           <div className="skeleton-line wide" />
           <div className="skeleton-grid">
@@ -29,4 +24,3 @@ export default function Loading() {
     </main>
   );
 }
-

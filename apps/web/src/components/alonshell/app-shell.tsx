@@ -7,6 +7,7 @@ import {
   GearSix,
   House,
   NotePencil,
+  Plus,
   UserCircle,
   WaveSawtooth
 } from "@/components/phosphor-icons";
@@ -89,6 +90,9 @@ export function AppShell({
           );
         })}
       </nav>
+      <Link className="mobile-fab" href={"/tracker" as Route} aria-label="Add holding">
+        <Plus size={32} />
+      </Link>
     </main>
   );
 }
