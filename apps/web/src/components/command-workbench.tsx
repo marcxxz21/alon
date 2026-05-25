@@ -5,12 +5,21 @@ import Link from "next/link";
 import type { Route } from "next";
 import type { LeaderboardRow, Ticker, Watchlist } from "@stocksage/contracts";
 import { CalendarBlank, MagnifyingGlass } from "@/components/phosphor-icons";
+import { getBrowserSupabase } from "@/lib/supabase-browser";
 
 type CommandWorkbenchProps = {
   tickers: Ticker[];
   leaderboards: LeaderboardRow[];
   watchlist: Watchlist;
 };
+
+async function authHeaders(): Promise<Record<string, string>> {
+  const supabase = getBrowserSupabase();
+  if (!supabase) return {};
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 export function CommandTopbar({ tickers, leaderboards, watchlist }: CommandWorkbenchProps) {
   const [query, setQuery] = useState("");
@@ -119,7 +128,10 @@ export function WatchlistComposer({ tickers, watchlist }: Pick<CommandWorkbenchP
 
     const response = await fetch(`/api/watchlists/${watchlist.id}/items`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(await authHeaders())
+      },
       body: JSON.stringify({ symbol: normalized })
     });
 

@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getWatchlists, jsonError } from "@/lib/data";
+import { jsonError } from "@/lib/data";
+import { createWatchlist, getWatchlistsForRequest } from "@/lib/watchlist-api";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    return NextResponse.json(await getWatchlists());
+    return NextResponse.json(await getWatchlistsForRequest(request));
   } catch (error) {
     return jsonError(error);
   }
@@ -11,17 +12,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    return NextResponse.json(
-      {
-        id: crypto.randomUUID(),
-        name: body.name ?? "New Watchlist",
-        items: []
-      },
-      { status: 201 }
-    );
+    return await createWatchlist(request);
   } catch (error) {
     return jsonError(error, 400);
   }
 }
-

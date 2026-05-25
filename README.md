@@ -43,5 +43,6 @@ Copy `.env.example` to `.env` at the repo root and configure Supabase, database,
 - dbt target: Supabase Postgres
 
 See `docs/database-and-market-data.md` for the Supabase database path and the `PSEI.PS` Yahoo Finance ingestion route.
+See `docs/connection-setup.md` for the exact Supabase and Airflow environment variables and status-check URLs.
 
 V1 market data uses `yfinance` only, including `.PS` symbols such as `ALI.PS` and `PSEI.PS`. This project is for educational analytics and portfolio use only. It is not financial advice.
