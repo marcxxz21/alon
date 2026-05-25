@@ -10,6 +10,13 @@ import type {
 
 export const tickers: Ticker[] = [
   {
+    symbol: "PSEI",
+    yahooSymbol: "PSEI.PS",
+    companyName: "PSEi Index",
+    sector: "Index",
+    active: true
+  },
+  {
     symbol: "ALI",
     yahooSymbol: "ALI.PS",
     companyName: "Ayala Land, Inc.",
@@ -50,17 +57,18 @@ const baseDate = new Date("2026-05-22T00:00:00+08:00");
 
 export function pricesFor(symbol: string): PricePoint[] {
   const seed = symbol.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
-  const start = 20 + (seed % 80);
+  const isIndex = symbol.toUpperCase() === "PSEI";
+  const start = isIndex ? 5200 : 20 + (seed % 80);
 
   return Array.from({ length: 90 }, (_, index) => {
     const date = new Date(baseDate);
     date.setDate(baseDate.getDate() - (89 - index));
-    const wave = Math.sin((index + seed) / 7) * 2.4;
-    const trend = index * ((seed % 7) - 2) * 0.015;
+    const wave = Math.sin((index + seed) / 7) * (isIndex ? 92 : 2.4);
+    const trend = index * ((seed % 7) - 2) * (isIndex ? 1.7 : 0.015);
     const close = Number((start + wave + trend).toFixed(2));
-    const open = Number((close - Math.sin(index / 4)).toFixed(2));
-    const high = Number((Math.max(open, close) + 1.2).toFixed(2));
-    const low = Number((Math.min(open, close) - 1.1).toFixed(2));
+    const open = Number((close - Math.sin(index / 4) * (isIndex ? 28 : 1)).toFixed(2));
+    const high = Number((Math.max(open, close) + (isIndex ? 44 : 1.2)).toFixed(2));
+    const low = Number((Math.min(open, close) - (isIndex ? 39 : 1.1)).toFixed(2));
 
     return {
       symbol,
@@ -69,7 +77,7 @@ export function pricesFor(symbol: string): PricePoint[] {
       high,
       low,
       close,
-      volume: 1_000_000 + ((seed * index * 193) % 8_000_000)
+      volume: isIndex ? 0 : 1_000_000 + ((seed * index * 193) % 8_000_000)
     };
   });
 }
@@ -149,6 +157,7 @@ export function leaderboards(): LeaderboardRow[] {
 }
 
 export const sectors = [
+  { sector: "Index", tickerCount: 1, avgChangePct: 2.73, avgMomentum20: 1.8 },
   { sector: "Property", tickerCount: 2, avgChangePct: 0.82, avgMomentum20: 2.7 },
   { sector: "Financials", tickerCount: 1, avgChangePct: 0.21, avgMomentum20: 1.4 },
   { sector: "Consumer", tickerCount: 1, avgChangePct: -0.18, avgMomentum20: -0.8 },
@@ -166,4 +175,3 @@ export const mockWatchlists: Watchlist[] = [
     ]
   }
 ];
-

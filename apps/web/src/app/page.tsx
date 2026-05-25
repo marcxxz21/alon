@@ -14,6 +14,7 @@ import { CommandTopbar, WatchlistComposer } from "@/components/command-workbench
 import { PriceChart } from "@/components/price-chart";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { getLeaderboards, getPrices, getSectors, getTickerSummary, getTickers, getWatchlists } from "@/lib/data";
+import { hasSupabaseConfig } from "@/lib/supabase";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-PH", {
@@ -30,10 +31,11 @@ function formatVolume(value: number) {
   }).format(value);
 }
 
-function signalClass(label: string) {
-  if (label === "bullish") return "positive";
-  if (label === "bearish") return "negative";
-  return "neutral";
+function formatIndex(value: number) {
+  return new Intl.NumberFormat("en-PH", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2
+  }).format(value);
 }
 
 const pipelineRuns = [
@@ -52,8 +54,8 @@ const alertFeed = [
 
 export default async function Home() {
   const [summary, prices, leaderboards, sectors, watchlists, tickers] = await Promise.all([
-    getTickerSummary("ALI"),
-    getPrices("ALI"),
+    getTickerSummary("PSEI"),
+    getPrices("PSEI"),
     getLeaderboards(),
     getSectors(),
     getWatchlists(),
@@ -69,6 +71,7 @@ export default async function Home() {
   const confidence = Math.round(summary.prediction.confidence * 1000) / 10;
   const bullishCount = leaderboards.filter((row) => row.signal === "bullish").length;
   const bearishCount = leaderboards.filter((row) => row.signal === "bearish").length;
+  const databaseConnected = hasSupabaseConfig();
 
   return (
     <main className="tide-page">
@@ -78,65 +81,6 @@ export default async function Home() {
       <div className="wave-field" aria-hidden="true" />
 
       <section className="deck-shell" aria-label="Alon command deck">
-        <aside className="phone-stage" aria-label="Mobile PWA preview">
-          <div className="phone-device phone-landing">
-            <div className="phone-notch" />
-            <div className="phone-status">11:31</div>
-            <div className="phone-brand">
-              <WaveSawtooth size={22} weight="bold" />
-              <span>Alon</span>
-            </div>
-            <div className="phone-copy">
-              <span>Track the</span>
-              <strong>market tide</strong>
-              <span>with clarity</span>
-            </div>
-            <p>
-              AI signals, pipeline health, and warehouse freshness in a pocket-ready PWA.
-            </p>
-            <div className="floating-metric metric-a">
-              Signal Strength
-              <strong>{summary.changePct > 0 ? "+" : ""}{summary.changePct.toFixed(2)}%</strong>
-            </div>
-            <div className="floating-metric metric-b">
-              Flow Runs
-              <strong>38</strong>
-            </div>
-            <div className="floating-metric metric-c">
-              Model
-              <strong>{confidence}%</strong>
-            </div>
-            <a className="deck-button phone-button" href="/api/tickers/ALI/summary">
-              Get started
-              <ChartLineUp size={18} weight="bold" />
-            </a>
-          </div>
-
-          <div className="phone-device phone-signals">
-            <div className="phone-notch" />
-            <div className="phone-status">11:31</div>
-            <p className="micro-label">Signals</p>
-            <h2>You have {bullishCount + bearishCount} active signals</h2>
-            <div className="signal-card">
-              <span>Model drift is stable</span>
-              <p>All monitored models are within acceptable range.</p>
-            </div>
-            <div className="signal-list">
-              {topRows.slice(0, 4).map((row, index) => (
-                <div className="signal-item" key={row.symbol} style={{ "--index": index } as React.CSSProperties}>
-                  <span>{row.symbol} {row.signal}</span>
-                  <strong className={signalClass(row.signal)}>
-                    {row.momentum20 && row.momentum20 > 0 ? "+" : ""}{row.momentum20?.toFixed(2)}%
-                  </strong>
-                  <div className="signal-bar">
-                    <i style={{ width: `${Math.round(row.confidence * 100)}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </aside>
-
         <section className="command-panel">
           <aside className="side-rail" aria-label="Workspace navigation">
             <div className="side-logo">
@@ -159,7 +103,7 @@ export default async function Home() {
               </div>
               <div className="deck-health">
                 <ShieldCheck size={19} weight="fill" />
-                Perfect cloud connected
+                {databaseConnected ? "Supabase connected" : "Mock mode: connect Supabase"}
               </div>
             </header>
 
@@ -169,8 +113,8 @@ export default async function Home() {
                 <span>as of 9:41 AM PHT</span>
                 <dl>
                   <div>
-                    <dt>PSEi sample</dt>
-                    <dd>5,297.10 <strong className="positive">+2.73%</strong></dd>
+                    <dt>PSEi via PSEI.PS</dt>
+                    <dd>{formatIndex(summary.lastClose)} <strong className={summary.changePct >= 0 ? "positive" : "negative"}>{summary.changePct > 0 ? "+" : ""}{summary.changePct.toFixed(2)}%</strong></dd>
                   </div>
                   <div>
                     <dt>Tracked tickers</dt>
@@ -185,14 +129,14 @@ export default async function Home() {
 
               <article className="glass-tile forecast-gauge">
                 <p className="tile-label">Forecast Signal</p>
-                <span>{summary.ticker.symbol} - baseline classifier</span>
+                <span>{summary.ticker.symbol} - market index monitor</span>
                 <div className="gauge-ring" style={{ "--score": `${confidence}%` } as React.CSSProperties}>
                   <strong>{confidence}%</strong>
                   <small>{summary.prediction.label}</small>
                 </div>
                 <div className="split-row">
                   <span>Target close</span>
-                  <strong>{formatCurrency(summary.lastClose * 1.018)}</strong>
+                  <strong>{formatIndex(summary.lastClose * 1.018)}</strong>
                 </div>
               </article>
 
@@ -216,14 +160,14 @@ export default async function Home() {
                 <div className="warehouse-main">
                   <Database size={38} />
                   <div>
-                    <small>Lakehouse DB</small>
-                    <strong>Healthy</strong>
+                    <small>{databaseConnected ? "Live database" : "Not connected yet"}</small>
+                    <strong>{databaseConnected ? "Healthy" : "Mock mode"}</strong>
                   </div>
                 </div>
                 <div className="warehouse-stats">
-                  <span>Last updated <strong>14m ago</strong></span>
-                  <span>Rows <strong>2,847,193</strong></span>
-                  <span>Tables <strong>1,248</strong></span>
+                  <span>Last updated <strong>{databaseConnected ? "14m ago" : "local"}</strong></span>
+                  <span>Rows <strong>{databaseConnected ? "2,847,193" : "mock"}</strong></span>
+                  <span>Tables <strong>12 planned</strong></span>
                 </div>
               </article>
             </section>

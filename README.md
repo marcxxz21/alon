@@ -42,4 +42,6 @@ Copy `.env.example` to `.env` at the repo root and configure Supabase, database,
 - Database/Auth: Supabase
 - dbt target: Supabase Postgres
 
+See `docs/database-and-market-data.md` for the Supabase database path and the `PSEI.PS` Yahoo Finance ingestion route.
+
 This project is for educational analytics and portfolio use only. It is not financial advice.

@@ -207,6 +207,7 @@ create policy "users can manage own alerts" on public.alert_rules
 
 insert into public.tickers (symbol, yahoo_symbol, company_name, sector, source_metadata)
 values
+  ('PSEI', 'PSEI.PS', 'PSEi Index', 'Index', '{"seed": true, "instrument_type": "index"}'),
   ('ALI', 'ALI.PS', 'Ayala Land, Inc.', 'Property', '{"seed": true}'),
   ('BDO', 'BDO.PS', 'BDO Unibank, Inc.', 'Financials', '{"seed": true}'),
   ('JFC', 'JFC.PS', 'Jollibee Foods Corporation', 'Consumer', '{"seed": true}'),
@@ -218,4 +219,3 @@ on conflict (symbol) do update set
   sector = excluded.sector,
   active = true,
   updated_at = now();
-
