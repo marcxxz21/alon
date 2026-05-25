@@ -19,6 +19,17 @@ Required Vercel environment variables:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
+For local development, put these in `apps/web/.env.local` because Vercel and Next.js use `apps/web` as the app root:
+
+```txt
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_SUPABASE_URL=https://ovhsldrzfqwyoemepbmb.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_twMH6pCzxQNdf0up996QoA_KV1ZLtj2
+SUPABASE_SERVICE_ROLE_KEY=
+```
+
+Restart `npm run dev:web` after changing env files.
+
 What these enable:
 
 - Supabase Auth login and signup.
