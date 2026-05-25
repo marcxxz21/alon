@@ -1,12 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { buildPortfolioSummary, demoHoldingInputs, type HoldingInput } from "./portfolio";
-import { getServiceSupabase, hasSupabaseConfig } from "./supabase";
+import { getRequestSupabase, hasSupabaseConfig } from "./supabase";
+
+function getToken(request: NextRequest) {
+  return request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? null;
+}
 
 async function getUserId(request: NextRequest) {
-  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  const token = getToken(request);
   if (!token || !hasSupabaseConfig()) return null;
 
-  const { data, error } = await getServiceSupabase().auth.getUser(token);
+  const { data, error } = await getRequestSupabase(token).auth.getUser(token);
   if (error || !data.user) return null;
   return data.user.id;
 }
@@ -15,7 +19,7 @@ export async function getPortfolioForRequest(request: NextRequest) {
   const userId = await getUserId(request);
   if (!userId) return buildPortfolioSummary();
 
-  const { data, error } = await getServiceSupabase()
+  const { data, error } = await getRequestSupabase(getToken(request) ?? undefined)
     .from("portfolio_holdings")
     .select("id,ticker_symbol,shares_owned,average_buy_price,notes")
     .eq("user_id", userId)
@@ -53,7 +57,7 @@ export async function createHolding(request: NextRequest) {
     }, { status: 201 });
   }
 
-  const { data, error } = await getServiceSupabase()
+  const { data, error } = await getRequestSupabase(getToken(request) ?? undefined)
     .from("portfolio_holdings")
     .upsert({
       user_id: userId,
@@ -75,7 +79,7 @@ export async function updateHolding(request: NextRequest, id: string) {
   const userId = await getUserId(request);
   if (!userId) return NextResponse.json({ id, ...body, mode: "mock" });
 
-  const { data, error } = await getServiceSupabase()
+  const { data, error } = await getRequestSupabase(getToken(request) ?? undefined)
     .from("portfolio_holdings")
     .update({
       shares_owned: Number(body.sharesOwned),
@@ -96,7 +100,7 @@ export async function deleteHolding(request: NextRequest, id: string) {
   const userId = await getUserId(request);
   if (!userId) return new NextResponse(null, { status: 204 });
 
-  const { error } = await getServiceSupabase()
+  const { error } = await getRequestSupabase(getToken(request) ?? undefined)
     .from("portfolio_holdings")
     .delete()
     .eq("id", id)

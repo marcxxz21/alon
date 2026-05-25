@@ -1,13 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { Watchlist } from "@stocksage/contracts";
 import { mockWatchlists } from "@/lib/mock-data";
-import { getServiceSupabase, hasSupabaseConfig } from "@/lib/supabase";
+import { getRequestSupabase, hasSupabaseConfig } from "@/lib/supabase";
+
+function getToken(request: NextRequest) {
+  return request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? null;
+}
 
 async function getUserId(request: NextRequest) {
-  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  const token = getToken(request);
   if (!token || !hasSupabaseConfig()) return null;
 
-  const { data, error } = await getServiceSupabase().auth.getUser(token);
+  const { data, error } = await getRequestSupabase(token).auth.getUser(token);
   if (error || !data.user) return null;
   return data.user.id;
 }
@@ -16,7 +20,7 @@ export async function getWatchlistsForRequest(request: NextRequest): Promise<Wat
   const userId = await getUserId(request);
   if (!userId) return mockWatchlists;
 
-  const supabase = getServiceSupabase();
+  const supabase = getRequestSupabase(getToken(request) ?? undefined);
   const { data: watchlists, error } = await supabase
     .from("watchlists")
     .select("id,name,created_at")
@@ -67,7 +71,7 @@ export async function createWatchlist(request: NextRequest) {
     return NextResponse.json({ id: crypto.randomUUID(), name, items: [], mode: "mock" }, { status: 201 });
   }
 
-  const { data, error } = await getServiceSupabase()
+  const { data, error } = await getRequestSupabase(getToken(request) ?? undefined)
     .from("watchlists")
     .insert({ user_id: userId, name })
     .select("id,name,created_at")
@@ -96,7 +100,7 @@ export async function addWatchlistItem(request: NextRequest, watchlistId: string
     }, { status: 201 });
   }
 
-  const supabase = getServiceSupabase();
+  const supabase = getRequestSupabase(getToken(request) ?? undefined);
   const { data: watchlist, error: watchlistError } = await supabase
     .from("watchlists")
     .select("id")
@@ -130,7 +134,7 @@ export async function deleteWatchlistItem(request: NextRequest, watchlistId: str
   const userId = await getUserId(request);
   if (!userId) return new NextResponse(null, { status: 204 });
 
-  const { data: watchlist, error: watchlistError } = await getServiceSupabase()
+  const { data: watchlist, error: watchlistError } = await getRequestSupabase(getToken(request) ?? undefined)
     .from("watchlists")
     .select("id")
     .eq("id", watchlistId)
@@ -140,7 +144,7 @@ export async function deleteWatchlistItem(request: NextRequest, watchlistId: str
   if (watchlistError) throw watchlistError;
   if (!watchlist) return NextResponse.json({ error: "Watchlist not found." }, { status: 404 });
 
-  const { error } = await getServiceSupabase()
+  const { error } = await getRequestSupabase(getToken(request) ?? undefined)
     .from("watchlist_items")
     .delete()
     .eq("watchlist_id", watchlistId)
