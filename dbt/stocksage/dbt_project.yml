@@ -1,0 +1,19 @@
+name: stocksage
+version: "0.1.0"
+config-version: 2
+
+profile: stocksage
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+models:
+  stocksage:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
+    features:
+      +materialized: table
+

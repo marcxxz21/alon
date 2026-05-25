@@ -1,0 +1,22 @@
+{
+  "name": "stocksage-ph-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Philippine stock analytics data platform deployable on Vercel.",
+  "workspaces": [
+    "apps/web",
+    "packages/contracts"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace apps/web run dev",
+    "build:web": "npm --workspace apps/web run build",
+    "lint:web": "npm --workspace apps/web run lint",
+    "typecheck:web": "npm --workspace apps/web run typecheck",
+    "test:worker": "cd services/worker && pytest",
+    "dbt:parse": "cd dbt/stocksage && dbt parse",
+    "dbt:test": "cd dbt/stocksage && dbt test"
+  },
+  "engines": {
+    "node": ">=20.18.0"
+  }
+}

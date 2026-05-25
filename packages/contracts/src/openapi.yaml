@@ -1,0 +1,121 @@
+openapi: 3.1.0
+info:
+  title: Alon API
+  version: 0.1.0
+  description: Public dashboard and authenticated watchlist contract.
+paths:
+  /api/tickers:
+    get:
+      summary: List active tickers
+      responses:
+        "200":
+          description: Active ticker list
+  /api/tickers/{symbol}/summary:
+    get:
+      summary: Get latest ticker summary, indicators, and prediction
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ticker summary
+        "404":
+          description: Unknown ticker
+  /api/tickers/{symbol}/prices:
+    get:
+      summary: Get historical OHLCV prices
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: range
+          in: query
+          schema:
+            type: string
+            enum: [1m, 3m, 6m, 1y, 5y]
+      responses:
+        "200":
+          description: Historical prices
+  /api/tickers/{symbol}/indicators:
+    get:
+      summary: Get latest indicators for a ticker
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Indicator snapshot
+  /api/tickers/{symbol}/prediction:
+    get:
+      summary: Get latest explainable prediction for a ticker
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Prediction
+  /api/sectors:
+    get:
+      summary: Get sector aggregates
+      responses:
+        "200":
+          description: Sector summaries
+  /api/leaderboards:
+    get:
+      summary: Get market leaderboards
+      responses:
+        "200":
+          description: Leaderboards
+  /api/watchlists:
+    get:
+      summary: List authenticated user's watchlists
+      responses:
+        "200":
+          description: Watchlists
+        "401":
+          description: Authentication required
+    post:
+      summary: Create watchlist
+      responses:
+        "201":
+          description: Created watchlist
+  /api/watchlists/{id}/items:
+    post:
+      summary: Add ticker to watchlist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Created watchlist item
+  /api/watchlists/{id}/items/{symbol}:
+    delete:
+      summary: Remove ticker from watchlist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: symbol
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Removed

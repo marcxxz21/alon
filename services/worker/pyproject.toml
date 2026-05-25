@@ -1,0 +1,36 @@
+[project]
+name = "stocksage-worker"
+version = "0.1.0"
+description = "ETL, indicators, and baseline ML worker for Alon."
+requires-python = ">=3.11"
+dependencies = [
+  "pandas>=2.2.0",
+  "numpy>=1.26.0",
+  "sqlalchemy>=2.0.0",
+  "psycopg[binary]>=3.2.0",
+  "yfinance>=0.2.50",
+  "pydantic>=2.10.0",
+  "pydantic-settings>=2.7.0",
+  "scikit-learn>=1.5.0",
+  "prefect>=3.1.0"
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.0"
+]
+
+[project.scripts]
+stocksage-ingest = "stocksage_worker.cli:ingest"
+stocksage-predict = "stocksage_worker.cli:predict"
+
+[build-system]
+requires = ["setuptools>=75.0.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
