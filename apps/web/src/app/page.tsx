@@ -1,9 +1,7 @@
 import {
-  CalendarBlank,
   ChartLineUp,
   Database,
   House,
-  MagnifyingGlass,
   Pulse,
   ShieldCheck,
   Sparkle,
@@ -12,9 +10,10 @@ import {
   WaveSawtooth
 } from "@/components/phosphor-icons";
 import Link from "next/link";
+import { CommandTopbar, WatchlistComposer } from "@/components/command-workbench";
 import { PriceChart } from "@/components/price-chart";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
-import { getLeaderboards, getPrices, getSectors, getTickerSummary, getWatchlists } from "@/lib/data";
+import { getLeaderboards, getPrices, getSectors, getTickerSummary, getTickers, getWatchlists } from "@/lib/data";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("en-PH", {
@@ -52,12 +51,13 @@ const alertFeed = [
 ];
 
 export default async function Home() {
-  const [summary, prices, leaderboards, sectors, watchlists] = await Promise.all([
+  const [summary, prices, leaderboards, sectors, watchlists, tickers] = await Promise.all([
     getTickerSummary("ALI"),
     getPrices("ALI"),
     getLeaderboards(),
     getSectors(),
-    getWatchlists()
+    getWatchlists(),
+    getTickers()
   ]);
 
   if (!summary) {
@@ -150,23 +150,7 @@ export default async function Home() {
           </aside>
 
           <div className="deck-content">
-            <nav className="deck-topbar" aria-label="Command deck tools">
-              <div className="search-shell">
-                <MagnifyingGlass size={16} />
-                <span>Search ticker or company...</span>
-                <kbd>K</kbd>
-              </div>
-              <div className="date-pill">
-                <CalendarBlank size={16} />
-                May 12, 2026 - May 16, 2026
-              </div>
-              <button className="deck-select" type="button">Production</button>
-              <div className="live-sync">
-                <i />
-                Live Sync
-                <span>2.4s ago</span>
-              </div>
-            </nav>
+            <CommandTopbar leaderboards={leaderboards} tickers={tickers} watchlist={watchlist} />
 
             <header className="deck-heading">
               <div>
@@ -356,14 +340,7 @@ export default async function Home() {
               </article>
             </section>
 
-            <form className="watchlist-form" aria-label="Add ticker to watchlist">
-              <label htmlFor="ticker-symbol">Add symbol to authenticated watchlist</label>
-              <div className="input-line">
-                <input id="ticker-symbol" placeholder="TEL, BDO, JFC" />
-                <button type="button">Add ticker</button>
-              </div>
-              <p>Helper: production writes this through Supabase Auth and RLS-protected watchlist tables.</p>
-            </form>
+            <WatchlistComposer tickers={tickers} watchlist={watchlist} />
           </div>
         </section>
       </section>
